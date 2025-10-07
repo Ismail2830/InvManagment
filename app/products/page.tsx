@@ -1,0 +1,87 @@
+import { Suspense } from 'react'
+import { Plus } from 'lucide-react'
+import Link from 'next/link'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+import { ProductsTable } from '../components/products/products-table'
+import { ProductsTableSkeleton } from '../components/products/products-table-skeleton' 
+import { getProducts } from '@/app/lib/products'
+
+export default async function ProductsPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header Section */}
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4 py-6 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Products
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your product inventory and stock levels
+              </p>
+            </div>
+            
+            <Button asChild className="w-full md:w-auto">
+              <Link href="/products/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Product
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>All Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Suspense fallback={<ProductsTableSkeleton />}>
+              <ProductsTableContent />
+            </Suspense>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+async function ProductsTableContent() {
+  try {
+    const products = await getProducts()
+    return <ProductsTable data={products} />
+  } catch (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="rounded-full bg-destructive/10 p-3 mb-4">
+          <svg
+            className="h-6 w-6 text-destructive"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold">Failed to load products</h3>
+        <p className="text-muted-foreground mb-4">
+          {error instanceof Error ? error.message : 'There was an error loading the products.'}
+        </p>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    )
+  }
+}
