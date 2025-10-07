@@ -1,3 +1,4 @@
+
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Plus } from 'lucide-react'
@@ -15,8 +16,6 @@ import { CategoriesTableSkeleton } from '../components/categories/categories-tab
 
 
 export default async function CategoriesPage() {
- 
-
   return (
     <div className='min-h-screen bg-background'>
       {/* Header Section */}

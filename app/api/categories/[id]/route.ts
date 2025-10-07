@@ -34,11 +34,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: number } }
 ) {
   try {
     const { id } = params;
-    const categoryId = parseInt(id, 10);
+    const categoryId = id;
 
     if (isNaN(categoryId)) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });

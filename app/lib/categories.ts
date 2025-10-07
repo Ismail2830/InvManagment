@@ -13,7 +13,8 @@ function apiUrl(path: string) {
 export async function getCategories() {
     try {
         const response = await fetch(apiUrl('/api/categories'), {
-            next: { revalidate: 60 } // cache for 60 seconds
+           // cache for 60 seconds
+         // ensure fresh data on every request
         })
         if(!response.ok) {
             throw new Error(`Failed to fetch categories : ${response.status}`)
@@ -92,28 +93,29 @@ export async function updateCategory(id: number, data: {
     }
 }
 
-// DELETE /api/categories/[id] - Delete a category
+// Delete a category by ID using your API route
 export async function deleteCategory(id: number) {
-    try {
-        const response = await fetch(`/api/categories/${id}`, {
-            method: 'DELETE',
-        })
-        if(!response.ok) {
-            const errorData = await response.json()
-            if(response.status === 404) {
-                throw new Error("Category not found")  
-            }
-            if(response.status === 409) {
-                throw new Error("Cannot delete category with existing products")
-            }
-            throw new Error(errorData.error || 'Failed to delete category')
+  try {
+    const response = await fetch(`/api/categories/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (response.status === 404) {
+        throw new Error("Category not found");
+      }
+      if (response.status === 409) {
+        throw new Error("Cannot delete category with existing products");
+      }
+      throw new Error(errorData.error || 'Failed to delete category');
     }
-    
-        return await response.json()
-    } catch (error) {
-        console.error('Error deleting category', error);
-        throw error
-    }
+    // DELETE returns 204 No Content
+    if (response.status === 204) return null;
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting category', error);
+    throw error;
+  }
 }
 
 // Helper function for form data

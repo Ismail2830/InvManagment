@@ -268,13 +268,6 @@ function CategoryActions({ category, onDelete }: CategoryActionsProps) {
         <DropdownMenuSeparator />
         
         <DropdownMenuItem asChild>
-          <Link href={`/categories/${category.id}`}>
-            <Eye className="mr-2 h-4 w-4" />
-            View Details
-          </Link>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem asChild>
           <Link href={`/categories/${category.id}/edit`}>
             <Edit3 className="mr-2 h-4 w-4" />
             Edit Category
