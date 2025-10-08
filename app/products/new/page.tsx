@@ -27,16 +27,32 @@ interface Supplier {
   name: string;
 }
 
+// Function to generate SKU
+function generateSKU(productName: string, categoryName?: string): string {
+  const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+  const namePrefix = productName
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '') // Remove special characters
+    .slice(0, 3) // Take first 3 characters
+    .padEnd(3, 'X'); // Pad with X if less than 3 chars
+  
+  const categoryPrefix = categoryName
+    ? categoryName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 2).padEnd(2, 'X')
+    : 'XX';
+    
+  return `${categoryPrefix}-${namePrefix}-${timestamp}`;
+}
 
 export default function NewProductPage() {
   const [formData, setFormData] = useState({
     name: "",
-    sku: "",
     description: "",
     price: "",
+    costPrice: "",
     quantity: "",
     minStock: "",
     maxStock: "",
+    unit: "pcs",
     categoryId: "",
     supplierId: ""
   });
@@ -44,30 +60,61 @@ export default function NewProductPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [supplierLoading, setSuppliersLoading] = useState(true);
+  const [suppliersLoading, setSuppliersLoading] = useState(true);
+  const [generatedSku, setGeneratedSku] = useState("");
 
   const router = useRouter();
   const { toast } = useToast();
 
-  // Load categories on component mount
+  // Load categories and suppliers on component mount
   useEffect(() => {
-    const loadCategories = async () => {
+    let isMounted = true;
+
+    const loadData = async () => {
       try {
-        const cats = await getCategories();
-        setCategories(cats);
+        const [cats, sups] = await Promise.all([
+          getCategories(),
+          getSuppliers()
+        ]);
+
+        if (isMounted) {
+          setCategories(cats);
+          setSuppliers(sups);
+        }
+        
       } catch (error) {
-        toast({
-          title: "Error loading categories",
-          description: "Failed to load categories. Please refresh the page.",
-          variant: "error"
-        });
+        if (isMounted) {
+          toast({
+            title: "Error loading data",
+            description: "Failed to load categories or suppliers. Please refresh the page.",
+            variant: "destructive"
+          });
+        }
       } finally {
-        setCategoriesLoading(false);
+        if (isMounted) {
+          setCategoriesLoading(false);
+          setSuppliersLoading(false);
+        }
       }
     };
 
-    loadCategories();
-  }, [toast]);
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); 
+
+  // Generate SKU whenever name or category changes
+  useEffect(() => {
+    if (formData.name) {
+      const selectedCategory = categories.find(cat => cat.id === parseInt(formData.categoryId));
+      const sku = generateSKU(formData.name, selectedCategory?.name);
+      setGeneratedSku(sku);
+    } else {
+      setGeneratedSku("");
+    }
+  }, [formData.name, formData.categoryId, categories]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,21 +123,24 @@ export default function NewProductPage() {
     try {
       const productData = {
         name: formData.name,
-        sku: formData.sku,
+        sku: generatedSku, // Use generated SKU
         description: formData.description || undefined,
         price: parseFloat(formData.price),
+        costPrice: formData.costPrice ? parseFloat(formData.costPrice) : undefined,
         quantity: parseInt(formData.quantity) || 0,
         minStock: parseInt(formData.minStock) || 0,
         maxStock: formData.maxStock ? parseInt(formData.maxStock) : undefined,
-        categoryId: parseInt(formData.categoryId)
+        unit: formData.unit,
+        categoryId: parseInt(formData.categoryId),
+        supplierId: parseInt(formData.supplierId)
       };
 
       await createProduct(productData);
       
       toast({
         title: "Product created",
-        description: `"${formData.name}" has been added to inventory.`,
-        variant: "success"
+        description: `"${formData.name}" has been added to inventory with SKU: ${generatedSku}`,
+        variant: "default" // Fixed: changed from "success"
       });
       
       router.push("/products");
@@ -98,7 +148,7 @@ export default function NewProductPage() {
       toast({
         title: "Error creating product",
         description: error instanceof Error ? error.message : "Something went wrong.",
-        variant: "error"
+        variant: "destructive" // Fixed: changed from "error"
       });
     } finally {
       setLoading(false);
@@ -141,29 +191,30 @@ export default function NewProductPage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Product Name *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Enter product name"
-                      value={formData.name}
-                      onChange={(e) => handleChange("name", e.target.value)}
-                      required
-                      autoFocus
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sku">SKU *</Label>
-                    <Input
-                      id="sku"
-                      placeholder="Enter SKU"
-                      value={formData.sku}
-                      onChange={(e) => handleChange("sku", e.target.value)}
-                      required
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter product name"
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    required
+                    autoFocus
+                  />
                 </div>
+
+                {/* Generated SKU Display */}
+                {generatedSku && (
+                  <div className="space-y-2">
+                    <Label>Generated SKU</Label>
+                    <div className="px-3 py-2 bg-muted rounded-md text-sm font-mono">
+                      {generatedSku}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      SKU is automatically generated based on product name and category
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
@@ -176,31 +227,53 @@ export default function NewProductPage() {
                   />
                 </div>
 
-                {/* Category */}
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Select 
-                    value={formData.categoryId} 
-                    onValueChange={(value) => handleChange("categoryId", value)}
-                    disabled={categoriesLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select a category"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Category and Supplier */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category *</Label>
+                    <Select 
+                      value={formData.categoryId} 
+                      onValueChange={(value) => handleChange("categoryId", value)}
+                      disabled={categoriesLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select a category"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="supplier">Supplier *</Label>
+                    <Select 
+                      value={formData.supplierId} 
+                      onValueChange={(value) => handleChange("supplierId", value)}
+                      disabled={suppliersLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={suppliersLoading ? "Loading suppliers..." : "Select a supplier"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {suppliers.map((supplier) => (
+                          <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                            {supplier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Pricing & Stock */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price *</Label>
+                    <Label htmlFor="price">Selling Price *</Label>
                     <Input
                       id="price"
                       type="number"
@@ -212,6 +285,21 @@ export default function NewProductPage() {
                       required
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="costPrice">Cost Price</Label>
+                    <Input
+                      id="costPrice"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={formData.costPrice}
+                      onChange={(e) => handleChange("costPrice", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="quantity">Current Stock</Label>
                     <Input
@@ -234,17 +322,26 @@ export default function NewProductPage() {
                       onChange={(e) => handleChange("minStock", e.target.value)}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="maxStock">Max Stock Level</Label>
+                    <Input
+                      id="maxStock"
+                      type="number"
+                      min="0"
+                      placeholder="Leave empty for no limit"
+                      value={formData.maxStock}
+                      onChange={(e) => handleChange("maxStock", e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="maxStock">Max Stock Level (Optional)</Label>
+                  <Label htmlFor="unit">Unit</Label>
                   <Input
-                    id="maxStock"
-                    type="number"
-                    min="0"
-                    placeholder="Leave empty for no limit"
-                    value={formData.maxStock}
-                    onChange={(e) => handleChange("maxStock", e.target.value)}
+                    id="unit"
+                    placeholder="e.g., pcs, kg, liters"
+                    value={formData.unit}
+                    onChange={(e) => handleChange("unit", e.target.value)}
                   />
                 </div>
 
@@ -252,7 +349,7 @@ export default function NewProductPage() {
                 <div className="flex gap-4 pt-4">
                   <Button 
                     type="submit" 
-                    disabled={loading || !formData.name || !formData.sku || !formData.categoryId || !formData.price}
+                    disabled={loading || !formData.name || !formData.categoryId || !formData.supplierId || !formData.price}
                     className="flex-1"
                   >
                     {loading ? "Creating Product..." : "Create Product"}

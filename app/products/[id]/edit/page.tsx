@@ -16,8 +16,14 @@ import { useToast } from "@/app/hooks/use-toast";
 
 import { updateProduct, getProduct, Product } from "@/app/lib/products";
 import { getCategories } from "@/app/lib/categories";
+import { getSuppliers } from "@/app/lib/suppliers";
 
 interface Category {
+  id: number;
+  name: string;
+}
+
+interface Supplier {
   id: number;
   name: string;
 }
@@ -32,12 +38,16 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     sku: "",
     description: "",
     price: "",
+    costPrice: "",
     quantity: "",
     minStock: "",
     maxStock: "",
-    categoryId: ""
+    unit: "",
+    categoryId: "",
+    supplierId: "" // Added missing supplierId
   });
   const [categories, setCategories] = useState<Category[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [productId, setProductId] = useState<number | null>(null);
@@ -45,8 +55,10 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Load product and categories
+  // Load product, categories and suppliers
   useEffect(() => {
+    let isMounted = true;
+
     const loadData = async () => {
       try {
         const { id } = await params;
@@ -59,36 +71,51 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         
         setProductId(parsedId);
 
-        const [product, cats] = await Promise.all([
+        const [product, cats, sups] = await Promise.all([
           getProduct(parsedId),
-          getCategories()
+          getCategories(),
+          getSuppliers()
         ]);
 
-        setFormData({
-          name: product.name,
-          sku: product.sku,
-          description: product.description || "",
-          price: product.price.toString(),
-          quantity: product.quantity.toString(),
-          minStock: product.minStock.toString(),
-          maxStock: product.maxStock ? product.maxStock.toString() : "",
-          categoryId: product.categoryId.toString()
-        });
-        
-        setCategories(cats);
+        if (isMounted) {
+          setFormData({
+            name: product.name,
+            sku: product.sku,
+            description: product.description || "",
+            price: product.price.toString(),
+            costPrice: product.costPrice ? product.costPrice.toString() : "",
+            quantity: product.quantity.toString(),
+            minStock: product.minStock.toString(),
+            maxStock: product.maxStock ? product.maxStock.toString() : "",
+            unit: product.unit || "pcs",
+            categoryId: product.categoryId.toString(),
+            supplierId: product.supplierId.toString() // Added missing supplierId
+          });
+          
+          setCategories(cats);
+          setSuppliers(sups);
+        }
       } catch (error) {
-        toast({
-          title: "Error loading product",
-          description: "Failed to load product data. Please try again.",
-          variant: "error"
-        });
-        router.push("/products");
+        if (isMounted) {
+          toast({
+            title: "Error loading product",
+            description: "Failed to load product data. Please try again.",
+            variant: "destructive" // Fixed: changed from "error" to "destructive"
+          });
+          router.push("/products");
+        }
       } finally {
-        setInitialLoading(false);
+        if (isMounted) {
+          setInitialLoading(false);
+        }
       }
     };
 
     loadData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [params, router, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,10 +130,13 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         sku: formData.sku,
         description: formData.description || undefined,
         price: parseFloat(formData.price),
+        costPrice: formData.costPrice ? parseFloat(formData.costPrice) : undefined,
         quantity: parseInt(formData.quantity) || 0,
         minStock: parseInt(formData.minStock) || 0,
         maxStock: formData.maxStock ? parseInt(formData.maxStock) : undefined,
-        categoryId: parseInt(formData.categoryId)
+        unit: formData.unit,
+        categoryId: parseInt(formData.categoryId),
+        supplierId: parseInt(formData.supplierId) // Added missing supplierId
       };
 
       await updateProduct(productId, productData);
@@ -114,7 +144,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       toast({
         title: "Product updated",
         description: `"${formData.name}" has been updated successfully.`,
-        variant: "success"
+        variant: "default" // Fixed: changed from "success" to "default"
       });
       
       router.push("/products");
@@ -122,7 +152,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       toast({
         title: "Error updating product",
         description: error instanceof Error ? error.message : "Something went wrong.",
-        variant: "error"
+        variant: "destructive" // Fixed: changed from "error" to "destructive"
       });
     } finally {
       setLoading(false);
@@ -195,7 +225,12 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                       value={formData.sku}
                       onChange={(e) => handleChange("sku", e.target.value)}
                       required
+                      disabled // SKU should not be editable after creation
+                      className="bg-muted"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      SKU cannot be changed after creation
+                    </p>
                   </div>
                 </div>
 
@@ -210,30 +245,51 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                   />
                 </div>
 
-                {/* Category */}
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Select 
-                    value={formData.categoryId} 
-                    onValueChange={(value) => handleChange("categoryId", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Category and Supplier */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category *</Label>
+                    <Select 
+                      value={formData.categoryId} 
+                      onValueChange={(value) => handleChange("categoryId", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="supplier">Supplier *</Label>
+                    <Select 
+                      value={formData.supplierId} 
+                      onValueChange={(value) => handleChange("supplierId", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a supplier" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {suppliers.map((supplier) => (
+                          <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                            {supplier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Pricing & Stock */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price *</Label>
+                    <Label htmlFor="price">Selling Price *</Label>
                     <Input
                       id="price"
                       type="number"
@@ -245,6 +301,21 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                       required
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="costPrice">Cost Price</Label>
+                    <Input
+                      id="costPrice"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={formData.costPrice}
+                      onChange={(e) => handleChange("costPrice", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="quantity">Current Stock</Label>
                     <Input
@@ -267,17 +338,26 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                       onChange={(e) => handleChange("minStock", e.target.value)}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="maxStock">Max Stock Level</Label>
+                    <Input
+                      id="maxStock"
+                      type="number"
+                      min="0"
+                      placeholder="Leave empty for no limit"
+                      value={formData.maxStock}
+                      onChange={(e) => handleChange("maxStock", e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="maxStock">Max Stock Level (Optional)</Label>
+                  <Label htmlFor="unit">Unit</Label>
                   <Input
-                    id="maxStock"
-                    type="number"
-                    min="0"
-                    placeholder="Leave empty for no limit"
-                    value={formData.maxStock}
-                    onChange={(e) => handleChange("maxStock", e.target.value)}
+                    id="unit"
+                    placeholder="e.g., pcs, kg, liters"
+                    value={formData.unit}
+                    onChange={(e) => handleChange("unit", e.target.value)}
                   />
                 </div>
 
@@ -285,7 +365,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                 <div className="flex gap-4 pt-4">
                   <Button 
                     type="submit" 
-                    disabled={loading || !formData.name || !formData.sku || !formData.categoryId || !formData.price}
+                    disabled={loading || !formData.name || !formData.sku || !formData.categoryId || !formData.supplierId || !formData.price}
                     className="flex-1"
                   >
                     {loading ? "Updating Product..." : "Update Product"}

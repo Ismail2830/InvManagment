@@ -3,9 +3,8 @@ import { prisma } from "../../../lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  paramsPromise: Promise<{ params: { id: string } }>
+  { params }: { params: { id: string } }
 ) {
-  const { params } = await paramsPromise;
   const { id } = params;
   const productId = parseInt(id, 10);
 
@@ -33,9 +32,9 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  paramsPromise: Promise<{ params: { id: string } }>
+  { params }: { params: { id: string } }
 ) {
-  const { params } = await paramsPromise;
+  
   const { id } = params;
   const productId = parseInt(id, 10);
 
