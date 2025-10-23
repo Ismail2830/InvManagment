@@ -36,6 +36,9 @@ export default function RootLayout({
                     <a href="/products" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                       Products
                     </a>
+                    <a href="/orders" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                      Orders
+                    </a>
                   </div>
                 </div>
               </div>
@@ -62,7 +65,7 @@ export default function RootLayout({
         <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              © 2025 Inventory Management System. Built with Next.js & PostgreSQL.
+              © 2025 Inventory Management System. All rights reserved.
             </p>
           </div>
         </footer>

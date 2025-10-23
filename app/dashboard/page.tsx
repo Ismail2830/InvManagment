@@ -17,8 +17,11 @@ import { SupplierPerformanceChart } from '../components/dashboard/supplier-perfo
 import { RecentActivityFeed } from '../components/dashboard/recent-activity-feed' 
 import { AlertsPanel } from '../components/dashboard/alerts-panel' 
 import { DashboardSkeleton } from '../components/dashboard/dashboard-skeleton' 
+import { OrdersOverTimeChart } from '../components/dashboard/orders-over-time-chart'
+import { LowStockFromOrders } from '../components/dashboard/low-stock-from-orders'
 
 import { getAnalytics } from '../lib/analytics' 
+import { getOrdersAnalytics } from '../lib/orders-analytics'
 
 export default async function DashboardPage() {
   return (
@@ -55,10 +58,23 @@ export default async function DashboardPage() {
 
 async function DashboardContent() {
   try {
-    const analytics = await getAnalytics()
+    // Fetch all necessary analytics data
+    const [ analytics, ordersData ] = await Promise.all([
+      getAnalytics(),
+      getOrdersAnalytics(14) // Last 14 days
+    ])
+    
     
     return (
       <div className="space-y-6">
+          {/* Orders Section - NEW */}
+        <div className="grid grid-cols-1 gap-6">
+          <OrdersOverTimeChart 
+            data={ordersData.overTime}
+            summary={ordersData.summary}
+          />
+         
+        </div>
         {/* Metric Cards - Mobile First Grid */}
         <MetricCards analytics={analytics} />
 
@@ -74,6 +90,8 @@ async function DashboardContent() {
             <AlertsPanel alerts={analytics.alerts} />
           </div>
         </div>
+
+      
 
         {/* Categories and Suppliers Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
