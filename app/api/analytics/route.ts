@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
     let inStock = 0
     let lowStock = 0
     let outOfStock = 0
-    const lowStockAlerts = []
-    const outOfStockAlerts = []
+    const lowStockAlerts: any[] = []
+    const outOfStockAlerts: any[] = []
 
     products.forEach(product => {
       if (product.quantity === 0) {
