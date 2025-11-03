@@ -1,6 +1,6 @@
 "use client"
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface StockStatusChartProps {
@@ -12,22 +12,34 @@ interface StockStatusChartProps {
   }>
 }
 
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    payload: {
+      name: string
+      value: number
+      color: string
+      percentage: string
+    }
+  }>
+}
+
 export function StockStatusChart({ data }: StockStatusChartProps) {
   const total = data.reduce((sum, item) => sum + item.value, 0)
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      const item = payload[0].payload
       return (
         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
           <p className="font-medium text-gray-900 dark:text-white">
-            {data.name}
+            {item.name}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Count: <span className="font-semibold">{data.value}</span>
+            Count: <span className="font-semibold">{item.value}</span>
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Percentage: <span className="font-semibold">{data.percentage}%</span>
+            Percentage: <span className="font-semibold">{item.percentage}%</span>
           </p>
         </div>
       )

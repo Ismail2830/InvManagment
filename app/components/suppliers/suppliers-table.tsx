@@ -74,7 +74,7 @@ export function SuppliersTable({ data }: SuppliersTableProps) {
       toast({
         title: "Cannot delete supplier",
         description: "This supplier has products. Please reassign or delete all products first.",
-        variant: "error"
+        variant: "destructive"
       })
       setDeleteDialogOpen(false)
       return
@@ -87,14 +87,13 @@ export function SuppliersTable({ data }: SuppliersTableProps) {
       toast({
         title: "Supplier deleted",
         description: `${selectedSupplier.name} has been successfully deleted.`,
-        variant: "success"
       })
       router.refresh()
     } catch (error) {
       toast({
         title: "Error deleting supplier",
         description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "error"
+        variant: "destructive"
       })
     } finally {
       setIsDeleting(false)
@@ -222,7 +221,7 @@ export function SuppliersTable({ data }: SuppliersTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Supplier</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedSupplier?.name}"? 
+              Are you sure you want to delete &ldquo;{selectedSupplier?.name}&rdquo;? 
               This action cannot be undone.
               {selectedSupplier?._count && selectedSupplier._count.products > 0 && (
                 <div className="mt-2 p-2 bg-destructive/10 rounded text-destructive text-sm">

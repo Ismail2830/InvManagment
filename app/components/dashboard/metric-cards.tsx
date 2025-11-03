@@ -10,8 +10,28 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
+interface AnalyticsOverview {
+  totalProducts: number
+  totalCategories: number
+  totalSuppliers: number
+  lowStockProducts: number
+  outOfStockProducts: number
+  totalInventoryValue: number
+  averageProductValue: number
+}
+
+interface Analytics {
+  overview: AnalyticsOverview
+  stockDistribution?: unknown[]
+  topCategories?: unknown[]
+  supplierPerformance?: unknown[]
+  recentActivity?: unknown[]
+  alerts?: unknown
+  trends?: unknown
+}
+
 interface MetricCardsProps {
-  analytics: any
+  analytics: Analytics
 }
 
 export function MetricCards({ analytics }: MetricCardsProps) {

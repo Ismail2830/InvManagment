@@ -13,20 +13,33 @@ interface TopCategoriesChartProps {
   }>
 }
 
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    payload: {
+      name: string
+      fullName: string
+      products: number
+      value: number
+      color: string
+    }
+  }>
+}
+
 export function TopCategoriesChart({ data }: TopCategoriesChartProps) {
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      const item = payload[0].payload
       return (
         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
           <p className="font-medium text-gray-900 dark:text-white">
-            {data.fullName}
+            {item.fullName}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Products: <span className="font-semibold">{data.products}</span>
+            Products: <span className="font-semibold">{item.products}</span>
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Value: <span className="font-semibold">${data.value.toLocaleString()}</span>
+            Value: <span className="font-semibold">${item.value.toLocaleString()}</span>
           </p>
         </div>
       )

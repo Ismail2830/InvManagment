@@ -51,6 +51,12 @@ interface ProductsTableProps {
   data: Product[]
 }
 
+type StockStatus = {
+  status: string
+  variant: 'destructive' | 'default' | 'secondary'
+  text: string
+}
+
 export function ProductsTable({ data }: ProductsTableProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -73,14 +79,13 @@ export function ProductsTable({ data }: ProductsTableProps) {
       toast({
         title: "Product deleted",
         description: `${selectedProduct.name} has been successfully deleted.`,
-        variant: "success"
       })
       router.refresh()
     } catch (error) {
       toast({
         title: "Error deleting product",
         description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "error"
+        variant: "destructive"
       })
     } finally {
       setIsDeleting(false)
@@ -89,7 +94,7 @@ export function ProductsTable({ data }: ProductsTableProps) {
     }
   }
 
-  const getStockStatus = (quantity: number, minStock: number) => {
+  const getStockStatus = (quantity: number, minStock: number): StockStatus => {
     if (quantity <= 0) {
       return { status: 'out-of-stock', variant: 'destructive' as const, text: 'Out of Stock' }
     }
@@ -196,7 +201,7 @@ export function ProductsTable({ data }: ProductsTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Product</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedProduct?.name}"? 
+              Are you sure you want to delete &ldquo;{selectedProduct?.name}&rdquo;? 
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -222,7 +227,7 @@ export function ProductsTable({ data }: ProductsTableProps) {
 interface ProductCardProps {
   product: Product
   onDelete: (product: Product) => void
-  getStockStatus: (quantity: number, minStock: number) => any
+  getStockStatus: (quantity: number, minStock: number) => StockStatus
 }
 
 function ProductCard({ product, onDelete, getStockStatus }: ProductCardProps) {

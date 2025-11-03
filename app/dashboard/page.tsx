@@ -1,14 +1,5 @@
 import { Suspense } from 'react'
-import { 
-  Package, 
-  Layers3, 
-  Building2, 
-  TrendingDown, 
-  AlertTriangle,
-  DollarSign,
-  Activity,
-  Clock
-} from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 
 import { MetricCards } from '../components/dashboard/metric-cards' 
 import { StockStatusChart } from '../components/dashboard/stock-status-chart' 
@@ -18,7 +9,6 @@ import { RecentActivityFeed } from '../components/dashboard/recent-activity-feed
 import { AlertsPanel } from '../components/dashboard/alerts-panel' 
 import { DashboardSkeleton } from '../components/dashboard/dashboard-skeleton' 
 import { OrdersOverTimeChart } from '../components/dashboard/orders-over-time-chart'
-import { LowStockFromOrders } from '../components/dashboard/low-stock-from-orders'
 
 import { getAnalytics } from '../lib/analytics' 
 import { getOrdersAnalytics } from '../lib/orders-analytics'
@@ -64,17 +54,16 @@ async function DashboardContent() {
       getOrdersAnalytics(14) // Last 14 days
     ])
     
-    
     return (
       <div className="space-y-6">
-          {/* Orders Section - NEW */}
+        {/* Orders Section - NEW */}
         <div className="grid grid-cols-1 gap-6">
           <OrdersOverTimeChart 
             data={ordersData.overTime}
             summary={ordersData.summary}
           />
-         
         </div>
+
         {/* Metric Cards - Mobile First Grid */}
         <MetricCards analytics={analytics} />
 
@@ -91,8 +80,6 @@ async function DashboardContent() {
           </div>
         </div>
 
-      
-
         {/* Categories and Suppliers Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <TopCategoriesChart data={analytics.topCategories} />
@@ -103,7 +90,7 @@ async function DashboardContent() {
         <RecentActivityFeed activities={analytics.recentActivity} />
       </div>
     )
-  } catch (error) {
+  } catch {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-4 mb-4">

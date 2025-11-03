@@ -31,8 +31,9 @@ export function CategoryForm({ initialData, isEdit = false }: CategoryFormProps)
       toast.success('Category created successfully!')
       router.push('/categories')
       router.refresh()
-    } catch (error: any) {
-      toast.error(error.message || 'Something went wrong')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Something went wrong'
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }

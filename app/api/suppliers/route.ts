@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 
 // GET /api/suppliers - Get all suppliers
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const suppliers = await prisma.supplier.findMany({
       orderBy: { createdAt: 'desc' },

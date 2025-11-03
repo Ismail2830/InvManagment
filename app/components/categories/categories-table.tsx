@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { 
-  Eye, 
   Edit3, 
   Trash2, 
   MoreHorizontal, 
@@ -183,7 +182,7 @@ export function CategoriesTable({ data }: CategoriesTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Category</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedCategory?.name}"? 
+              Are you sure you want to delete &ldquo;{selectedCategory?.name}&rdquo;? 
               This action cannot be undone.
               {selectedCategory?._count && selectedCategory._count.products > 0 && (
                 <div className="mt-2 p-2 bg-destructive/10 rounded text-destructive text-sm">

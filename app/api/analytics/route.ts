@@ -1,7 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 
-export async function GET(request: NextRequest) {
+type Decimalish = number | string | { toString(): string }
+
+interface ProductAlertItem {
+  id: number
+  name: string
+  sku: string
+  quantity: number
+  minStock: number
+  price: Decimalish
+  createdAt: Date
+  category: { id: number; name: string } | null
+  supplier: { id: number; name: string } | null
+}
+
+export async function GET() {
   try {
     // Basic metrics
     const [
@@ -42,16 +56,16 @@ export async function GET(request: NextRequest) {
     let inStock = 0
     let lowStock = 0
     let outOfStock = 0
-    const lowStockAlerts: any[] = []
-    const outOfStockAlerts: any[] = []
+    const lowStockAlerts: ProductAlertItem[] = []
+    const outOfStockAlerts: ProductAlertItem[] = []
 
-    products.forEach(product => {
+    products.forEach((product) => {
       if (product.quantity === 0) {
         outOfStock++
-        outOfStockAlerts.push(product)
+        outOfStockAlerts.push(product as ProductAlertItem)
       } else if (product.quantity <= product.minStock) {
         lowStock++
-        lowStockAlerts.push(product)
+        lowStockAlerts.push(product as ProductAlertItem)
       } else {
         inStock++
       }
@@ -61,7 +75,7 @@ export async function GET(request: NextRequest) {
     const safeTotal = totalProducts || 1
 
     // Stock distribution for pie chart
-    const stockDistribution = [
+    const stockDistribution: { name: string; value: number; color: string; percentage: string }[] = [
       { 
         name: 'In Stock', 
         value: inStock, 
@@ -97,12 +111,11 @@ export async function GET(request: NextRequest) {
     })
 
     const topCategories = categoryStats.map((cat, index) => ({
-      name: cat.name.length > 15 ? cat.name.substring(0, 15) + '...' : cat.name,
+      name: cat.name.length > 15 ? `${cat.name.substring(0, 15)}...` : cat.name,
       fullName: cat.name,
       products: cat._count.products,
       value: cat.products.reduce((sum, p) => {
-        // Convert Decimal to number properly
-        const price = typeof p.price === 'object' ? parseFloat(p.price.toString()) : p.price
+        const price = typeof p.price === 'object' ? parseFloat(p.price.toString()) : (p.price as number)
         return sum + (price * p.quantity)
       }, 0),
       color: `hsl(${(index * 45) % 360}, 70%, 50%)`
@@ -123,12 +136,11 @@ export async function GET(request: NextRequest) {
     })
 
     const supplierPerformance = supplierStats.map((supplier, index) => ({
-      name: supplier.name.length > 15 ? supplier.name.substring(0, 15) + '...' : supplier.name,
+      name: supplier.name.length > 15 ? `${supplier.name.substring(0, 15)}...` : supplier.name,
       fullName: supplier.name,
       products: supplier._count.products,
       value: supplier.products.reduce((sum, p) => {
-        // Convert Decimal to number properly
-        const price = typeof p.price === 'object' ? parseFloat(p.price.toString()) : p.price
+        const price = typeof p.price === 'object' ? parseFloat(p.price.toString()) : (p.price as number)
         return sum + (price * p.quantity)
       }, 0),
       color: `hsl(${(index * 72) % 360}, 65%, 55%)`
@@ -143,16 +155,18 @@ export async function GET(request: NextRequest) {
       .slice(0, 10)
       .map(product => ({
         ...product,
-        price: typeof product.price === 'object' ? parseFloat(product.price.toString()) : product.price,
+        price: typeof product.price === 'object' ? parseFloat(product.price.toString()) : (product.price as number),
         timeAgo: getTimeAgo(new Date(product.createdAt))
       }))
 
     // Monthly trends (last 6 months)
-    const monthlyTrends = []
-    const avgPrice = inventoryAggregation._avg.price ? 
-      (typeof inventoryAggregation._avg.price === 'object' ? 
-        parseFloat(inventoryAggregation._avg.price.toString()) : 
-        inventoryAggregation._avg.price) : 0
+    const monthlyTrends: { month: string; products: number; value: number }[] = []
+    const avgPrice =
+      inventoryAggregation._avg.price
+        ? (typeof inventoryAggregation._avg.price === 'object'
+            ? parseFloat(inventoryAggregation._avg.price.toString())
+            : inventoryAggregation._avg.price)
+        : 0
 
     for (let i = 5; i >= 0; i--) {
       const date = new Date()
@@ -177,10 +191,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate total inventory value properly
-    const totalInventoryValue = inventoryAggregation._sum.price ? 
-      (typeof inventoryAggregation._sum.price === 'object' ? 
-        parseFloat(inventoryAggregation._sum.price.toString()) : 
-        inventoryAggregation._sum.price) : 0
+    const totalInventoryValue =
+      inventoryAggregation._sum.price
+        ? (typeof inventoryAggregation._sum.price === 'object'
+            ? parseFloat(inventoryAggregation._sum.price.toString())
+            : inventoryAggregation._sum.price)
+        : 0
 
     const analytics = {
       overview: {
@@ -236,4 +252,3 @@ function getTimeAgo(date: Date): string {
   
   return date.toLocaleDateString()
 }
-

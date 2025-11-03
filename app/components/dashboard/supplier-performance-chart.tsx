@@ -13,20 +13,33 @@ interface SupplierPerformanceChartProps {
   }>
 }
 
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    payload: {
+      name: string
+      fullName: string
+      products: number
+      value: number
+      color: string
+    }
+  }>
+}
+
 export function SupplierPerformanceChart({ data }: SupplierPerformanceChartProps) {
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      const item = payload[0].payload
       return (
         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
           <p className="font-medium text-gray-900 dark:text-white">
-            {data.fullName}
+            {item.fullName}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Products: <span className="font-semibold">{data.products}</span>
+            Products: <span className="font-semibold">{item.products}</span>
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Portfolio Value: <span className="font-semibold">${data.value.toLocaleString()}</span>
+            Portfolio Value: <span className="font-semibold">${item.value.toLocaleString()}</span>
           </p>
         </div>
       )
@@ -48,6 +61,12 @@ export function SupplierPerformanceChart({ data }: SupplierPerformanceChartProps
               data={data}
               margin={{ top: 20, right: 20, left: 0, bottom: 60 }}
             >
+              <defs>
+                <linearGradient id="colorSuppliers" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis 
                 dataKey="name" 
@@ -66,12 +85,6 @@ export function SupplierPerformanceChart({ data }: SupplierPerformanceChartProps
                 fill="url(#colorSuppliers)"
                 strokeWidth={2}
               />
-              <defs>
-                <linearGradient id="colorSuppliers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
             </AreaChart>
           </ResponsiveContainer>
         </div>

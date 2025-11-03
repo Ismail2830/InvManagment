@@ -22,8 +22,20 @@ interface OrdersOverTimeChartProps {
   }
 }
 
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    payload: {
+      date: string
+      count: number
+      revenue: number
+      label: string
+    }
+  }>
+}
+
 export function OrdersOverTimeChart({ data, summary }: OrdersOverTimeChartProps) {
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload
       return (
