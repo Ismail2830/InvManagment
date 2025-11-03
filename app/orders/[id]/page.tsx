@@ -18,23 +18,23 @@ interface OrderPageProps {
   params: Promise<{ id: string }>
 }
 
-// Helper function to safely format currency
-const formatCurrency = (value: any): string => {
+// Helper function to safely format currency (no explicit any)
+const formatCurrency = (
+  value: number | string | { toString(): string } | null | undefined
+): string => {
   if (value === null || value === undefined) return '0.00'
-  
+
   let numericValue: number
-  
-  if (typeof value === 'object' && value !== null) {
-    // Handle Prisma Decimal type
-    numericValue = parseFloat(value.toString())
+
+  if (typeof value === 'number') {
+    numericValue = value
   } else if (typeof value === 'string') {
     numericValue = parseFloat(value)
-  } else if (typeof value === 'number') {
-    numericValue = value
   } else {
-    numericValue = 0
+    // Decimal-like object
+    numericValue = parseFloat(value.toString())
   }
-  
+
   return isNaN(numericValue) ? '0.00' : numericValue.toFixed(2)
 }
 
@@ -51,7 +51,7 @@ export default function OrderPage({ params }: OrderPageProps) {
       try {
         const { id } = await params
         const parsedId = parseInt(id)
-        
+
         if (isNaN(parsedId)) {
           toast({
             title: 'Error',
@@ -63,7 +63,7 @@ export default function OrderPage({ params }: OrderPageProps) {
         }
 
         setOrderId(parsedId)
-        
+
         const orderData = await getOrder(parsedId)
         setOrder(orderData)
         setStatus(orderData.status)
@@ -85,7 +85,7 @@ export default function OrderPage({ params }: OrderPageProps) {
 
   const update = async (s: string) => {
     if (!orderId) return
-    
+
     try {
       await updateOrderStatus(orderId, s)
       setStatus(s)
@@ -106,7 +106,7 @@ export default function OrderPage({ params }: OrderPageProps) {
 
   const doDelete = async () => {
     if (!orderId) return
-    
+
     try {
       await deleteOrder(orderId)
       toast({
@@ -125,8 +125,8 @@ export default function OrderPage({ params }: OrderPageProps) {
     }
   }
 
-  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status.toLowerCase()) {
+  const getStatusVariant = (s: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (s.toLowerCase()) {
       case 'completed':
         return 'default'
       case 'cancelled':
@@ -181,7 +181,7 @@ export default function OrderPage({ params }: OrderPageProps) {
         <Button variant="ghost" size="sm" asChild className="mb-4">
           <Link href="/orders"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
         </Button>
-        
+
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
@@ -200,13 +200,13 @@ export default function OrderPage({ params }: OrderPageProps) {
                 <span className="font-medium">Total:</span> ${formatCurrency(order.totalAmount)}
               </div>
             </div>
-            
+
             {order.notes && (
               <div>
                 <span className="font-medium">Notes:</span> {order.notes}
               </div>
             )}
-            
+
             <div className="space-y-2">
               <label htmlFor="status" className="block font-medium">Status</label>
               <Select value={status} onValueChange={update}>
@@ -223,14 +223,14 @@ export default function OrderPage({ params }: OrderPageProps) {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Order Items</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {order.items && order.items.length > 0 ? (
-              order.items.map((item) => (
+              order.items.map((item: NonNullable<Order['items']>[number]) => (
                 <div key={item.id} className="flex justify-between items-center border-b pb-4 last:border-b-0">
                   <div className="flex-1">
                     <div className="font-medium">{item.product?.name || 'Unknown Product'}</div>
@@ -253,10 +253,10 @@ export default function OrderPage({ params }: OrderPageProps) {
             )}
           </CardContent>
         </Card>
-        
+
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             onClick={doDelete}
             className="w-full sm:w-auto"
           >
