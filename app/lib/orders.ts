@@ -13,7 +13,7 @@ export interface Order {
   id: number;
   orderNumber: string;
   orderDate: string;
-  totalAmount: number;
+  totalAmount: number | string | { toString: () => string };
   status: string;
   notes?: string;
   createdAt: string;
@@ -26,13 +26,13 @@ export interface OrderItem {
   orderId: number;
   productId: number;
   quantity: number;
-  unitPrice: number;
-  subtotal: number;
+  unitPrice: number | string | { toString: () => string };
+  subtotal: number | string | { toString: () => string };
   product?: {
     id: number;
     name: string;
     sku: string;
-    price: number;
+    price: number | string | { toString: () => string };
   };
 }
 
