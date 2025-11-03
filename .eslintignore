@@ -1,0 +1,13 @@
+# Prisma generated files
+app/generated/
+app/generated/prisma
+
+# Other build artifacts
+.next
+node_modules
+dist
+build
+
+# Environment files
+.env
+.env.local
