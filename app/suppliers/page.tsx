@@ -9,6 +9,9 @@ import { SuppliersTable } from '../components/suppliers/suppliers-table'
 import { SuppliersTableSkeleton } from '../components/suppliers/suppliers-table-skeleton' 
 import { getSuppliers } from '@/app/lib/suppliers'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 60
+
 export default async function SuppliersPage() {
   return (
     <div className="min-h-screen bg-background">

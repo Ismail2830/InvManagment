@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getOrders } from '@/app/lib/orders'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 60
+
 export default async function OrdersPage() {
   return (
     <div className="min-h-screen bg-background">

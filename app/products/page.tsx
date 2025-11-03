@@ -9,6 +9,9 @@ import { ProductsTable } from '../components/products/products-table'
 import { ProductsTableSkeleton } from '../components/products/products-table-skeleton' 
 import { getProducts } from '@/app/lib/products'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 60
+
 export default async function ProductsPage() {
   return (
     <div className="min-h-screen bg-background">

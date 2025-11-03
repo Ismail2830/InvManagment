@@ -8,15 +8,19 @@ import { SupplierPerformanceChart } from '../components/dashboard/supplier-perfo
 import { RecentActivityFeed } from '../components/dashboard/recent-activity-feed' 
 import { AlertsPanel } from '../components/dashboard/alerts-panel' 
 import { DashboardSkeleton } from '../components/dashboard/dashboard-skeleton' 
-import { OrdersOverTimeChart } from '../components/dashboard/orders-over-time-chart'
+import { OrdersOverTimeChart } from '../components/dashboard/orders-over-time-chart' 
+ 
 
 import { getAnalytics } from '../lib/analytics' 
 import { getOrdersAnalytics } from '../lib/orders-analytics'
 
+// Mark as dynamic - don't pre-render during build
+export const dynamic = 'force-dynamic'
+export const revalidate = 60 // Revalidate every 60 seconds
+
 export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile-First Header */}
       <div className="sticky top-0 z-40 border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -36,7 +40,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="px-4 sm:px-6 lg:px-8 py-6">
         <Suspense fallback={<DashboardSkeleton />}>
           <DashboardContent />
@@ -48,49 +51,41 @@ export default async function DashboardPage() {
 
 async function DashboardContent() {
   try {
-    // Fetch all necessary analytics data
-    const [ analytics, ordersData ] = await Promise.all([
+    const [analytics, ordersData] = await Promise.all([
       getAnalytics(),
-      getOrdersAnalytics(14) // Last 14 days
+      getOrdersAnalytics(14)
     ])
     
     return (
       <div className="space-y-6">
-        {/* Orders Section - NEW */}
-        <div className="grid grid-cols-1 gap-6">
-          <OrdersOverTimeChart 
-            data={ordersData.overTime}
-            summary={ordersData.summary}
-          />
-        </div>
-
-        {/* Metric Cards - Mobile First Grid */}
         <MetricCards analytics={analytics} />
 
-        {/* Charts Section - Responsive Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Stock Status - Full width on mobile, 2/3 on desktop */}
           <div className="xl:col-span-2">
             <StockStatusChart data={analytics.stockDistribution} />
           </div>
-          
-          {/* Alerts Panel - Stack on mobile */}
           <div className="xl:col-span-1">
             <AlertsPanel alerts={analytics.alerts} />
           </div>
         </div>
 
-        {/* Categories and Suppliers Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <OrdersOverTimeChart 
+            data={ordersData.overTime}
+            summary={ordersData.summary}
+          />
+          
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <TopCategoriesChart data={analytics.topCategories} />
           <SupplierPerformanceChart data={analytics.supplierPerformance} />
         </div>
 
-        {/* Recent Activity - Full Width */}
         <RecentActivityFeed activities={analytics.recentActivity} />
       </div>
     )
-  } catch {
+  } catch (error) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-4 mb-4">
@@ -100,7 +95,7 @@ async function DashboardContent() {
           Failed to load dashboard
         </h3>
         <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-          There was an error loading the dashboard data. Please check your connection and try again.
+          There was an error loading the dashboard data.
         </p>
         <button 
           onClick={() => window.location.reload()}
