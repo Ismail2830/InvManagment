@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Inventory Pro
+A modern, full-stack inventory management system built with Next.js, TypeScript, Prisma, and PostgreSQL. Manage products, categories, suppliers, and orders with real-time analytics and advanced filtering.
 
-## Getting Started
+🚀 Live Demo: https://inv-managment-ciepzyo2-ismail2830s-projects.vercel.app
 
-First, run the development server:
+✨ Features
+📊 Dashboard & Analytics
+Real-time Analytics Dashboard with key metrics
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Orders Over Time Chart - Track daily order trends
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Stock Status Overview - Visual representation of inventory levels
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Low Stock Alerts - Products running low from order activity
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Top Categories & Suppliers - Performance metrics
 
-## Learn More
+Recent Activity Feed - Track all inventory changes
 
-To learn more about Next.js, take a look at the following resources:
+🛍️ Product Management
+Full CRUD Operations - Create, read, update, delete products
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Advanced Search & Filtering - Find products quickly
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Stock Tracking - Monitor inventory levels and minimum stock alerts
 
-## Deploy on Vercel
+Category Organization - Organize products by categories
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Supplier Management - Track suppliers and their products
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Price Tracking - Monitor product pricing
+
+📦 Order Management
+Create & Track Orders - Full order lifecycle management
+
+Order Status Tracking - Pending, completed, cancelled orders
+
+Date Range Filtering - Filter orders by custom date ranges
+
+Today's Orders Widget - Quick view of today's activity
+
+Revenue Tracking - Monitor order values and revenue
+
+📁 Inventory Organization
+Categories - Organize products into logical groups
+
+Suppliers - Manage supplier information and relationships
+
+Stock Movements - Track inventory changes over time
+
+Low Stock Management - Get alerts for products below minimum stock
+
+🎨 User Experience
+Responsive Design - Mobile-first, works on all devices
+
+Dark Mode Support - Built-in dark theme support
+
+Real-time Updates - Instant feedback on actions
