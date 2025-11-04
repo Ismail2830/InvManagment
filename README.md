@@ -1,7 +1,7 @@
 Inventory Pro
 A modern, full-stack inventory management system built with Next.js, TypeScript, Prisma, and PostgreSQL. Manage products, categories, suppliers, and orders with real-time analytics and advanced filtering.
 
-🚀 Live Demo: https://inv-managment-ciepzyo2-ismail2830s-projects.vercel.app
+🚀 Live Demo: https://inv-managment.vercel.app/
 
 ✨ Features
 📊 Dashboard & Analytics
