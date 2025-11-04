@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
    // Skip ESLint during build (last resort)
   eslint: {
     ignoreDuringBuilds: true
+  },
+   // Don't pre-render pages that fetch data
+  experimental: {
+    // This helps with dynamic pages
   }
 };
 
