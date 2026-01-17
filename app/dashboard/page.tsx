@@ -1,4 +1,6 @@
-import { Suspense } from 'react'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { AlertTriangle } from 'lucide-react'
 
 import { MetricCards } from '../components/dashboard/metric-cards' 
@@ -14,11 +16,32 @@ import { OrdersOverTimeChart } from '../components/dashboard/orders-over-time-ch
 import { getAnalytics } from '../lib/analytics' 
 import { getOrdersAnalytics } from '../lib/orders-analytics'
 
-// Mark as dynamic - don't pre-render during build
-export const dynamic = 'force-dynamic'
-export const revalidate = 60 // Revalidate every 60 seconds
+export default function DashboardPage() {
+  const [analytics, setAnalytics] = useState<any>(null)
+  const [ordersData, setOrdersData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
-export default async function DashboardPage() {
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true)
+        const [analyticsData, ordersAnalytics] = await Promise.all([
+          getAnalytics(),
+          getOrdersAnalytics(14)
+        ])
+        setAnalytics(analyticsData)
+        setOrdersData(ordersAnalytics)
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to load dashboard'))
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="sticky top-0 z-40 border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
@@ -41,69 +64,55 @@ export default async function DashboardPage() {
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6">
-        <Suspense fallback={<DashboardSkeleton />}>
-          <DashboardContent />
-        </Suspense>
+        {isLoading ? (
+          <DashboardSkeleton />
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-4 mb-4">
+              <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Failed to load dashboard
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
+              {error.message}
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <MetricCards analytics={analytics} />
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2">
+                <StockStatusChart data={analytics.stockDistribution} />
+              </div>
+              <div className="xl:col-span-1">
+                <AlertsPanel alerts={analytics.alerts} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <OrdersOverTimeChart 
+                data={ordersData.overTime}
+                summary={ordersData.summary}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TopCategoriesChart data={analytics.topCategories} />
+              <SupplierPerformanceChart data={analytics.supplierPerformance} />
+            </div>
+
+            <RecentActivityFeed activities={analytics.recentActivity} />
+          </div>
+        )}
       </div>
     </div>
   )
-}
-
-async function DashboardContent() {
-  try {
-    const [analytics, ordersData] = await Promise.all([
-      getAnalytics(),
-      getOrdersAnalytics(14)
-    ])
-    
-    return (
-      <div className="space-y-6">
-        <MetricCards analytics={analytics} />
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2">
-            <StockStatusChart data={analytics.stockDistribution} />
-          </div>
-          <div className="xl:col-span-1">
-            <AlertsPanel alerts={analytics.alerts} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <OrdersOverTimeChart 
-            data={ordersData.overTime}
-            summary={ordersData.summary}
-          />
-          
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TopCategoriesChart data={analytics.topCategories} />
-          <SupplierPerformanceChart data={analytics.supplierPerformance} />
-        </div>
-
-        <RecentActivityFeed activities={analytics.recentActivity} />
-      </div>
-    )
-  } catch (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-4 mb-4">
-          <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          Failed to load dashboard
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-          There was an error loading the dashboard data.
-        </p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    )
-  }
 }
