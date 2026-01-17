@@ -1,16 +1,35 @@
-import { Suspense } from 'react'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { Plus, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getOrders } from '@/app/lib/orders'
+import { getOrders, Order } from '@/app/lib/orders'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 60
+export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
-export default async function OrdersPage() {
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true)
+        const data = await getOrders()
+        setOrders(data)
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to load orders'))
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchOrders()
+  }, [])
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-background/95 p-4">
@@ -33,36 +52,34 @@ export default async function OrdersPage() {
             <CardTitle>All Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<OrdersSkeleton />}>
-              <OrdersList />
-            </Suspense>
+            {isLoading ? (
+              <OrdersSkeleton />
+            ) : error ? (
+              <div className="text-center py-12 text-destructive">
+                {error.message}
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-12">No orders found</div>
+            ) : (
+              <div className="space-y-4">
+                {orders.map(order => (
+                  <Link key={order.id} href={`/orders/${order.id}`} className="flex justify-between items-center p-4 border rounded hover:bg-gray-50">
+                    <div>
+                      <div className="font-medium">{order.orderNumber}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(order.orderDate).toLocaleDateString()} • ${parseFloat(order.totalAmount.toString()).toFixed(2)}
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon">
+                      <ShoppingCart className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-    </div>
-  )
-}
-
-async function OrdersList() {
-  const orders = await getOrders()
-  if (!orders.length) {
-    return <div className="text-center py-12">No orders found</div>
-  }
-  return (
-    <div className="space-y-4">
-      {orders.map(order => (
-        <Link  key={order.id} href={`/orders/${order.id}`} className="flex justify-between items-center p-4 border rounded hover:bg-gray-50">
-            <div>
-              <div className="font-medium">{order.orderNumber}</div>
-              <div className="text-sm text-muted-foreground">
-                {new Date(order.orderDate).toLocaleDateString()} • ${parseFloat(order.totalAmount.toString()).toFixed(2)}
-              </div>
-            </div>
-            <Button variant="ghost" size="icon">
-              <ShoppingCart className="h-5 w-5" />
-            </Button>
-        </Link>
-      ))}
     </div>
   )
 }

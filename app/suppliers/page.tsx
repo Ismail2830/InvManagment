@@ -1,4 +1,6 @@
-import { Suspense } from 'react'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -9,10 +11,26 @@ import { SuppliersTable } from '../components/suppliers/suppliers-table'
 import { SuppliersTableSkeleton } from '../components/suppliers/suppliers-table-skeleton' 
 import { getSuppliers } from '@/app/lib/suppliers'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 60
+export default function SuppliersPage() {
+  const [suppliers, setSuppliers] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
-export default async function SuppliersPage() {
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        setIsLoading(true)
+        const data = await getSuppliers()
+        setSuppliers(data)
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to load suppliers'))
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchSuppliers()
+  }, [])
   return (
     <div className="min-h-screen bg-background">
       {/* Header Section */}
@@ -45,46 +63,39 @@ export default async function SuppliersPage() {
             <CardTitle>All Suppliers</CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<SuppliersTableSkeleton />}>
-              <SuppliersTableContent />
-            </Suspense>
+            {isLoading ? (
+              <SuppliersTableSkeleton />
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="rounded-full bg-destructive/10 p-3 mb-4">
+                  <svg
+                    className="h-6 w-6 text-destructive"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold">Failed to load suppliers</h3>
+                <p className="text-muted-foreground mb-4">
+                  {error.message}
+                </p>
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <SuppliersTable data={suppliers} />
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
   )
-}
-
-async function SuppliersTableContent() {
-  try {
-    const suppliers = await getSuppliers()
-    return <SuppliersTable data={suppliers} />
-  } catch (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="rounded-full bg-destructive/10 p-3 mb-4">
-          <svg
-            className="h-6 w-6 text-destructive"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold">Failed to load suppliers</h3>
-        <p className="text-muted-foreground mb-4">
-          {error instanceof Error ? error.message : 'There was an error loading the suppliers.'}
-        </p>
-        <Button variant="outline" onClick={() => window.location.reload()}>
-          Retry
-        </Button>
-      </div>
-    )
-  }
 }
