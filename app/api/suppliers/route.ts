@@ -16,8 +16,12 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json(suppliers, { status: 200 })
   } catch (error) {
     console.error('Error fetching suppliers:', error)
+    console.error('Error details:', JSON.stringify(error, null, 2))
     return NextResponse.json(
-      { error: 'Failed to fetch suppliers' },
+      { 
+        error: 'Failed to fetch suppliers',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     )
   }

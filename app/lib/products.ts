@@ -1,6 +1,7 @@
 function apiUrl(path: string) {
   if (typeof window === "undefined") {
     const base = process.env.NEXT_PUBLIC_APP_URL || "";
+    
     return `${base.replace(/\/$/, "")}${path}`;
   }
   return path;

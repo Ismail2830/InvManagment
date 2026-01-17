@@ -33,7 +33,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(orders, { status: 200 });
     } catch (error) {
         console.error("Error fetching orders:", error);
-        return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });   
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        return NextResponse.json({ 
+          error: "Failed to fetch orders",
+          details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });   
     }
 }
 
